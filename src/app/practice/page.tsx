@@ -169,7 +169,7 @@ export default function PracticePage() {
     setIsWrong(false);
 
     try {
-      await fetch("/speed-math/api/save-attempt", {
+      await fetch("/api/save-attempt", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -206,7 +206,7 @@ export default function PracticePage() {
         const wrongCount = questions.length - finalCorrect;
 
         try {
-          await fetch("/speed-math/api/save-result", {
+          await fetch("/api/save-result", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -253,7 +253,7 @@ export default function PracticePage() {
     if (!hasCurrentQuestionBeenWrong) {
       setHasCurrentQuestionBeenWrong(true);
       try {
-        await fetch("/speed-math/api/save-attempt", {
+        await fetch("/api/save-attempt", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -362,7 +362,7 @@ export default function PracticePage() {
   const restartQuiz = async () => {
     setIsRestarting(true);
     try {
-      const res = await fetch("/speed-math/api/start-practice", {
+      const res = await fetch("/api/start-practice", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

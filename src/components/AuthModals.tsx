@@ -81,7 +81,7 @@ export default function AuthModals() {
     }
 
     try {
-      const res = await fetch("/speed-math/api/register", {
+      const res = await fetch("/api/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

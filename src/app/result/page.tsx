@@ -71,7 +71,7 @@ export default function ResultPage() {
     setPlayLoading(true);
 
     try {
-      const res = await fetch("/speed-math/api/start-practice", {
+      const res = await fetch("/api/start-practice", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

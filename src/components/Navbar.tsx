@@ -55,7 +55,7 @@ const Navbar = () => {
                 {/* Logout Action Button */}
                 <li className="nav-item">
                   <button
-                    onClick={() => signOut({ callbackUrl: "/speed-math" })}
+                    onClick={() => signOut({ callbackUrl: "/" })}
                     className="btn btn-outline-danger btn-sm"
                   >
                     Logout

@@ -12,6 +12,6 @@ export default function SessionProviderWrapper({
 }: {
   children: React.ReactNode;
 }) {
-  return <SessionProvider basePath="/speed-math/api/auth">{children}</SessionProvider>;
+  return <SessionProvider>{children}</SessionProvider>;
 }
 
