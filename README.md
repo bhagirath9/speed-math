@@ -1,8 +1,6 @@
 # ⚡ Speed Math 
 
-project Link - https://speed-math-rho.vercel.app/
 
-Reference Design and functionality inspiration: https://cracku.in/speedmath
 
 Technology Stack • Next.js • TypeScript (TSX) • Bootstrap • Inline CSS (existing project pattern) • NextAuth Authentication • MongoDB • Fully Responsive UI (Mobile, Tablet, Desktop)
 
@@ -38,11 +36,6 @@ Question Attempt Logic Important Rule Once a user attempts a question:
 
 • That question should never be shown again to the same user. • Applicable across all sessions. • Persist in database.
 
-add .env.local file :-
-NEXTAUTH_URL=http://localhost:3000
-NEXTAUTH_SECRET=a_very_secure_secret_key_for_speed_math
-MONGODB_URI=mongodb
-
 
 
 
@@ -62,12 +55,9 @@ MONGODB_URI=mongodb
 10. [Technologies Used](#10-technologies-used)
 11. [Installation Guide](#11-installation-guide)
 12. [Environment Variables](#12-environment-variables)
-13. [Project Screenshots](#13-project-screenshots)
-14. [Future Improvements](#14-future-improvements)
-15. [Skills Demonstrated](#15-skills-demonstrated)
-16. [Recruiter Section](#16-recruiter-section)
-17. [Flow Diagrams](#17-flow-diagrams)
-18. [Code Quality](#18-code-quality)
+13. [Skills Demonstrated](#15-skills-demonstrated)
+14. [Flow Diagrams](#17-flow-diagrams)
+15. [Code Quality](#18-code-quality)
 
 ---
 
@@ -548,32 +538,7 @@ npm start
 
 ---
 
-## 13. Project Screenshots
-
-### 1. Landing Dashboard
-*Includes Hero section, Practice Configuration box, and onboarding timelines.*
-![Landing Page Screenshot](file:///c:/Users/bhagi/OneDrive/Desktop/coachify/speed-math/public/screenshots/landing.png)
-
-### 2. Interactive Practice Quiz View
-*Displays calculation question text, dynamic stopwatch timer, and focus mode toggle.*
-![Practice Mode Screenshot](file:///c:/Users/bhagi/OneDrive/Desktop/coachify/speed-math/public/screenshots/practice.png)
-
-### 3. SVG Score Report Card
-*Aggregates session parameters and displays dynamic, color-coded accuracy charts.*
-![Result Card Screenshot](file:///c:/Users/bhagi/OneDrive/Desktop/coachify/speed-math/public/screenshots/result.png)
-
----
-
-## 14. Future Improvements
-
-* **Stripe Checkout Integration:** Replace simulated payment flow with full Stripe integration to process transactions.
-* **Leaderboards:** Display top-performing users on the public leaderboard.
-* **Performance Graphs:** Render historical performance trends using chart libraries (such as `Chart.js` or `Recharts`) to track speed and accuracy over time.
-* **Competitive Multiplayer Matches:** Create real-time 1v1 math speed challenges using WebSockets.
-
----
-
-## 15. Skills Demonstrated
+## 13. Skills Demonstrated
 
 * **Secure Authentication:** Implements NextAuth credentials flow with password hashing using bcrypt.
 * **Strict Authorization Gates:** Restricts premium operations and difficulties on both front-end options and API entry points.
@@ -584,18 +549,8 @@ npm start
 
 ---
 
-## 16. Recruiter Section
 
-### Production-Ready Engineering Practices
-This project demonstrates several production-ready engineering practices:
-1. **Serverless Database Caching:** Implements Mongoose connection caching to prevent connection leak limits.
-2. **First-Try Correct Accuracy Calculation:** Tracks accuracy based on first-try attempts to maintain database scoring integrity.
-3. **No-Repeat Aggregation Query:** Employs MongoDB aggregation filters to exclude completed questions from subsequent sessions.
-4. **Co-located State Modals:** Employs context API models to handle overlays uniformly across pages.
-
----
-
-## 17. Flow Diagrams
+## 14. Flow Diagrams
 
 ### 1. User Registration Flow
 ```mermaid
@@ -698,15 +653,10 @@ sequenceDiagram
 
 ---
 
-## 18. Code Quality
+## 15. Code Quality
 
 ### Clean Architecture
 * **Separation of Concerns:** Business logic (such as mathematical calculations and difficulty boundaries) is isolated inside backend API routes. Front-end screens focus on capturing events and handling inputs.
 * **Component Reusability:** Overlays, navigation, practice panels, and timelines are modularized into independent components under the `components/` directory.
 * **Data Consistency:** Interfaces and TypeScript contracts are exported cleanly to prevent run-time type mismatch bugs.
 * **MongoDB Index Optimization:** High-frequency query selectors (`userId`, `sessionId`, `operation`, `difficulty`) use database indices to sustain fast document lookups as storage scales.
-
----
-
-## 📄 License
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
