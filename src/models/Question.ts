@@ -3,30 +3,38 @@ import mongoose, { Schema, model, models } from "mongoose";
 // Schema for pre-generated mathematics questions
 const QuestionSchema = new Schema(
   {
-    operand1: {
-      type: Number,
-      required: true,
-    },
-    operand2: {
-      type: Number,
-      required: true,
-    },
-    operator: {
+    category: {
       type: String,
+      default: "Math",
+      index: true,
+    },
+    topic: {
+      type: String,
+      index: true,
+    },
+    difficulty: {
+      type: String, // e.g. "easy", "medium", "hard"
       required: true,
+      index: true, // Indexed to support fast filtering in session generation queries
+    },
+    question: {
+      type: String,
     },
     answer: {
       type: Number,
       required: true,
     },
+    operand1: {
+      type: Number,
+    },
+    operand2: {
+      type: Number,
+    },
+    operator: {
+      type: String,
+    },
     operation: {
       type: String, // e.g. "addition", "subtraction", "multiplication", "division"
-      required: true,
-      index: true, // Indexed to support fast filtering in session generation queries
-    },
-    difficulty: {
-      type: String, // e.g. "easy", "medium", "hard"
-      required: true,
       index: true, // Indexed to support fast filtering in session generation queries
     },
   },

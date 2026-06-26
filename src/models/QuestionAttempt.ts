@@ -19,9 +19,16 @@ const QuestionAttemptSchema = new Schema(
       ref: "Question",
       required: true,
     },
+    category: {
+      type: String,
+      index: true,
+    },
+    topic: {
+      type: String,
+      index: true,
+    },
     operation: {
       type: String,
-      required: true,
     },
     difficulty: {
       type: String,

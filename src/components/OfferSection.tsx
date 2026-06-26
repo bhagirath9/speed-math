@@ -1,6 +1,8 @@
 "use client";
 
 import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { useModals } from "./ModalContext";
 
 /**
  * OfferSection displays the promotional billing block / upsell package for Speed Math.
@@ -8,17 +10,23 @@ import { useSession } from "next-auth/react";
  */
 const OfferSection = () => {
   const { data: session } = useSession();
+  const router = useRouter();
+  const { openLogin } = useModals();
 
   // Check user premium status in the current session object
   const isPurchased = (session?.user as any)?.isSpeedMathPurchased || false;
 
   /**
    * Enrolls the user into the premium package.
-   * If not logged in, opens the login modal. Otherwise, triggers the purchase API
-   * and updates the local NextAuth session token instantly upon success.
+   * If not logged in, opens the login modal. Otherwise, redirects to the checkout form page.
    */
   const handleEnroll = () => {
-    // Normal button click with no custom functionality
+    if (isPurchased) return;
+    if (!session) {
+      openLogin();
+      return;
+    }
+    router.push("/payment");
   };
 
   const features = [
@@ -195,17 +203,17 @@ const OfferSection = () => {
 
           <button
             className="btn btn-primary"
-            onClick={handleEnroll}
+            onClick={isPurchased ? undefined : handleEnroll}
+            disabled={isPurchased}
             style={{
               padding: "10px 20px",
               borderRadius: "6px",
               fontSize: "16px",
               fontWeight: 500,
-              // backgroundColor: "#389ae4ff",
-              // color: "white",
+              cursor: isPurchased ? "not-allowed" : "pointer",
             }}
           >
-            {isPurchased ? "Enrolled ✓" : "Enroll Now"}
+            {isPurchased ? "✓ Enrolled" : "Enroll Now"}
           </button>
 
         </div>
@@ -264,12 +272,14 @@ const OfferSection = () => {
 
         <button
           className="btn btn-primary w-100"
-          onClick={handleEnroll}
+          onClick={isPurchased ? undefined : handleEnroll}
+          disabled={isPurchased}
           style={{
             height: "50px",
+            cursor: isPurchased ? "not-allowed" : "pointer",
           }}
         >
-          {isPurchased ? "Enrolled ✓" : "Enroll Now"}
+          {isPurchased ? "✓ Enrolled" : "Enroll Now"}
         </button>
 
       </div>

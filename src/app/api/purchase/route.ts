@@ -3,7 +3,7 @@ import dbConnect from "@/lib/mongodb";
 import User from "@/models/User";
 
 /**
- * POST /speed-math/api/purchase
+ * POST /api/purchase
  * Simulates a successful mock payment processing flow by finding the user
  * and updating the `isSpeedMathPurchased` flag to true in MongoDB.
  */

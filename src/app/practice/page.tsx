@@ -8,18 +8,22 @@ import { FaClock } from "react-icons/fa";
 // Interface representing a single mathematics question in the practice session
 interface Question {
   id: string;
-  operand1: number;
-  operand2: number;
-  operator: string;
+  operand1?: number;
+  operand2?: number;
+  operator?: string;
   answer: number;
-  operation: string;
+  operation?: string;
   difficulty: string;
+  category?: string;
+  topic?: string;
+  question?: string;
 }
 
 // Interface representing the overall metadata and questions list of a practice session
 interface SessionData {
   sessionId: string;
   questions: Question[];
+  category?: string;
   operation: string;
   difficulty: string;
 }
@@ -176,7 +180,9 @@ export default function PracticePage() {
           userId: (session?.user as any).id,
           sessionId: sessionData.sessionId,
           questionId: currentQuestion.id,
-          operation: currentQuestion.operation,
+          operation: currentQuestion.operation || currentQuestion.topic || "",
+          category: currentQuestion.category || "Math",
+          topic: currentQuestion.topic || currentQuestion.operation || "",
           difficulty: currentQuestion.difficulty,
           isCorrect: true,
         }),
@@ -260,7 +266,9 @@ export default function PracticePage() {
             userId: (session?.user as any).id,
             sessionId: sessionData.sessionId,
             questionId: currentQuestion.id,
-            operation: currentQuestion.operation,
+            operation: currentQuestion.operation || currentQuestion.topic || "",
+            category: currentQuestion.category || "Math",
+            topic: currentQuestion.topic || currentQuestion.operation || "",
             difficulty: currentQuestion.difficulty,
             isCorrect: false,
           }),
@@ -367,7 +375,8 @@ export default function PracticePage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           userId: (session?.user as any).id,
-          operation: sessionData.operation,
+          category: sessionData.category || "Math",
+          selectedTopics: sessionData.operation,
           difficulty: sessionData.difficulty,
         }),
       });
@@ -379,6 +388,7 @@ export default function PracticePage() {
         const newSessionData = {
           sessionId: data.sessionId,
           questions: data.questions,
+          category: sessionData.category || "Math",
           operation: sessionData.operation,
           difficulty: sessionData.difficulty,
         };
@@ -560,16 +570,16 @@ export default function PracticePage() {
 
           <p
             id="question-text"
-            className="text-center mb-4 mb-lg-5 font-monospace"
+            className={`text-center mb-4 mb-lg-5 ${currentQuestion.question ? "" : "font-monospace"}`}
             style={{
-              fontSize: "72px",
+              fontSize: currentQuestion.question ? "32px" : "72px",
               fontWeight: 800,
               color: "#111827",
-              lineHeight: 1,
-              letterSpacing: "1px",
+              lineHeight: 1.3,
+              letterSpacing: currentQuestion.question ? "normal" : "1px",
             }}
           >
-            {currentQuestion.operand1} {currentQuestion.operator === "/" ? "÷" : currentQuestion.operator} {currentQuestion.operand2}
+            {currentQuestion.question ? currentQuestion.question : `${currentQuestion.operand1} ${currentQuestion.operator === "/" ? "÷" : currentQuestion.operator} ${currentQuestion.operand2}`}
           </p>
           <div className="mx-auto w-100" style={{ maxWidth: "551px" }}>
             <input

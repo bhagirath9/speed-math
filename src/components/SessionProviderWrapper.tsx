@@ -5,7 +5,7 @@ import React from "react";
 
 /**
  * SessionProviderWrapper wraps children components with the NextAuth client SessionProvider.
- * A custom basePath is configured here to align with the /speed-math/ routing subpath configuration.
+ * A custom basePath is configured here to align with the / routing subpath configuration.
  */
 export default function SessionProviderWrapper({
   children,

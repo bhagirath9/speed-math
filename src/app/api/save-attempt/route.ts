@@ -10,10 +10,10 @@ import QuestionAttempt from "@/models/QuestionAttempt";
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { userId, sessionId, questionId, operation, difficulty, isCorrect } = body;
+    const { userId, sessionId, questionId, operation, difficulty, isCorrect, category, topic } = body;
 
     // Validate that all required properties exist in the request body
-    if (!userId || !sessionId || !questionId || !operation || !difficulty || isCorrect === undefined) {
+    if (!userId || !sessionId || !questionId || !difficulty || isCorrect === undefined) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
@@ -28,6 +28,8 @@ export async function POST(req: Request) {
       sessionId,
       questionId,
       operation,
+      category: category || "Math",
+      topic: topic || operation,
       difficulty,
       isCorrect,
     });
@@ -44,4 +46,3 @@ export async function POST(req: Request) {
     );
   }
 }
-

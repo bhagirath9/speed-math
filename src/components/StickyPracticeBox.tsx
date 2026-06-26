@@ -6,23 +6,23 @@ import {
   FaMinusCircle,
   FaDivide,
   FaLock,
+  FaBook,
+  FaPalette,
+  FaFortAwesome,
+  FaMusic
 } from "react-icons/fa";
 import { RxCross2 } from "react-icons/rx";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useModals } from "./ModalContext";
-
-interface Operation {
-  id: string;
-  label: string;
-}
+import { CATEGORIES_CONFIG, isTopicLocked, isDifficultyLocked } from "@/lib/categoriesConfig";
 
 interface StickyPracticeBoxProps {
   mobile?: boolean;
 }
 
 /**
- * StickyPracticeBox lets users select mathematical operations (addition, subtraction, multiplication, division)
+ * StickyPracticeBox lets users select categories (Math, GK), topics/operations,
  * and difficulties (easy, medium, hard) to configure their practice session.
  * Enforces locks on premium elements and launches practice session initialization API calls.
  */
@@ -32,58 +32,42 @@ const StickyPracticeBox = ({
   const { data: session } = useSession();
   const { openLogin, openPremium } = useModals();
   const router = useRouter();
-  
+
   // Read purchase upgrade status from current session context
   const isPurchased = (session?.user as any)?.isSpeedMathPurchased || false;
 
-  // Track selection state arrays and difficulty configuration
-  const [selectedOperations, setSelectedOperations] =
-    useState<string[]>(["addition"]);
-
-  const [difficulty, setDifficulty] =
-    useState("easy");
-    
+  // Track category, topics, and difficulty
+  const [category, setCategory] = useState<string>("Math");
+  const [selectedTopics, setSelectedTopics] = useState<string[]>(["addition"]);
+  const [difficulty, setDifficulty] = useState("easy");
   const [startLoading, setStartLoading] = useState(false);
 
-  // Helper check: lock multiplication and division for non-premium users
+  // Helper check: lock topic/operation based on category config
   const isOperationLocked = (opId: string) => {
-    if (opId === "multiplication" || opId === "division") {
-      return !isPurchased;
-    }
-    return false;
+    return isTopicLocked(category, opId, isPurchased);
   };
 
   // Helper check: lock medium and hard difficulty configurations for non-premium users
-  const isDifficultyLocked = (diff: string) => {
-    if (diff === "medium" || diff === "hard") {
-      return !isPurchased;
-    }
-    return false;
+  const isDiffLocked = (diff: string) => {
+    return isDifficultyLocked(diff, isPurchased);
   };
 
-  const operations: Operation[] = [
-    {
-      id: "addition",
-      label: "Addition",
-    },
-    {
-      id: "subtraction",
-      label: "Subtraction",
-    },
-    {
-      id: "multiplication",
-      label: "Multiplication",
-    },
-    {
-      id: "division",
-      label: "Division",
-    },
-  ];
+  const activeCategoryConfig = CATEGORIES_CONFIG.find(cat => cat.id === category) || CATEGORIES_CONFIG[0];
+  const topics = activeCategoryConfig.topics;
 
-  // Select or deselect a single mathematical operation; checks authorization locks first
-  const toggleOperation = (
-    operationId: string
-  ) => {
+  const handleCategoryChange = (catId: string) => {
+    setCategory(catId);
+    const catConfig = CATEGORIES_CONFIG.find(c => c.id === catId);
+    if (catConfig && catConfig.topics.length > 0) {
+      // Free default: select first topic by default
+      setSelectedTopics([catConfig.topics[0].id]);
+    } else {
+      setSelectedTopics([]);
+    }
+  };
+
+  // Select or deselect a single topic; checks authorization locks first
+  const toggleOperation = (operationId: string) => {
     if (isOperationLocked(operationId)) {
       if (!session) {
         openLogin();
@@ -92,55 +76,39 @@ const StickyPracticeBox = ({
       }
       return;
     }
-    if (
-      selectedOperations.includes(
-        operationId
-      )
-    ) {
-      setSelectedOperations(
-        selectedOperations.filter(
-          (item) =>
-            item !== operationId
-        )
-      );
+    if (selectedTopics.includes(operationId)) {
+      setSelectedTopics(selectedTopics.filter((item) => item !== operationId));
     } else {
-      setSelectedOperations([
-        ...selectedOperations,
-        operationId,
-      ]);
+      setSelectedTopics([...selectedTopics, operationId]);
     }
   };
 
-  // Handles select-all action (only selects free operations if user is not upgraded)
+  // Handles select-all action (only selects free topics if user is not upgraded)
   const handleSelectAll = () => {
     if (!isPurchased) {
-      const unlockedOps = ["addition", "subtraction"];
-      const allUnlockedSelected = unlockedOps.every(op => selectedOperations.includes(op));
-      if (allUnlockedSelected) {
-        setSelectedOperations([]);
+      const freeTopics = topics
+        .filter((t) => !isTopicLocked(category, t.id, isPurchased))
+        .map((t) => t.id);
+
+      const allFreeSelected = freeTopics.every(tId => selectedTopics.includes(tId));
+      if (allFreeSelected) {
+        setSelectedTopics([]);
       } else {
-        setSelectedOperations(unlockedOps);
+        setSelectedTopics(freeTopics);
       }
       return;
     }
 
-    if (
-      selectedOperations.length ===
-      operations.length
-    ) {
-      setSelectedOperations([]);
+    if (selectedTopics.length === topics.length) {
+      setSelectedTopics([]);
     } else {
-      setSelectedOperations(
-        operations.map(
-          (item) => item.id
-        )
-      );
+      setSelectedTopics(topics.map((item) => item.id));
     }
   };
 
   // Handles updating active difficulty config state; enforces upgrade gates
   const handleDifficultyClick = (diff: string) => {
-    if (isDifficultyLocked(diff)) {
+    if (isDiffLocked(diff)) {
       if (!session) {
         openLogin();
       } else {
@@ -158,8 +126,8 @@ const StickyPracticeBox = ({
       return;
     }
 
-    if (selectedOperations.length === 0) {
-      alert("Please select at least one operation to practice.");
+    if (selectedTopics.length === 0) {
+      alert(`Please select at least one ${category === "Math" ? "operation" : "topic"} to practice.`);
       return;
     }
 
@@ -171,7 +139,8 @@ const StickyPracticeBox = ({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           userId: (session.user as any).id,
-          operation: selectedOperations.join(","),
+          category,
+          selectedTopics: selectedTopics.join(","),
           difficulty,
         }),
       });
@@ -183,7 +152,8 @@ const StickyPracticeBox = ({
         localStorage.setItem("speed_math_practice_session", JSON.stringify({
           sessionId: data.sessionId,
           questions: data.questions,
-          operation: selectedOperations.join(","),
+          category,
+          operation: selectedTopics.join(","), // Saved as operation for compatibility
           difficulty,
         }));
         router.push("/practice");
@@ -195,42 +165,24 @@ const StickyPracticeBox = ({
     }
   };
 
-  const getIcon = (
-    operation: string
-  ) => {
-    switch (operation) {
+  const getIcon = (id: string) => {
+    switch (id) {
       case "addition":
-        return (
-          <FaPlusCircle
-            size={22}
-            color="#1AB394"
-          />
-        );
-
+        return <FaPlusCircle size={22} color="#1AB394" />;
       case "subtraction":
-        return (
-          <FaMinusCircle
-            size={22}
-            color="#E51C01"
-          />
-        );
-
+        return <FaMinusCircle size={22} color="#E51C01" />;
       case "multiplication":
-        return (
-          <RxCross2
-            size={22}
-            color="#F59E0B"
-          />
-        );
-
+        return <RxCross2 size={22} color="#F59E0B" />;
       case "division":
-        return (
-          <FaDivide
-            size={22}
-            color="#0288D1"
-          />
-        );
-
+        return <FaDivide size={22} color="#0288D1" />;
+      case "Indian History":
+        return <FaBook size={22} color="#8B4513" />;
+      case "Indian Culture":
+        return <FaPalette size={22} color="#FF69B4" />;
+      case "Rajasthan History":
+        return <FaFortAwesome size={22} color="#D2691E" />;
+      case "Rajasthan Culture":
+        return <FaMusic size={22} color="#FFD700" />;
       default:
         return null;
     }
@@ -248,7 +200,7 @@ const StickyPracticeBox = ({
           : {
             position: "fixed",
             right: "50px",
-            top: "90px",
+            top: "65px",
             width: "430px",
             zIndex: 1000,
           }
@@ -259,7 +211,7 @@ const StickyPracticeBox = ({
         style={{
           background:
             "linear-gradient(to bottom,#f0faff,#ffffff)",
-          borderRadius: "20px",
+          borderRadius: "25px",
           overflow: "hidden",
         }}
       >
@@ -269,7 +221,7 @@ const StickyPracticeBox = ({
           style={{
             background:
               "linear-gradient(90deg,#0B6CBF,#0C3B55)",
-            height: "78px",
+            height: "60px",
             display: "flex",
             alignItems: "center",
             padding: "0 30px",
@@ -277,7 +229,7 @@ const StickyPracticeBox = ({
         >
           <span
             style={{
-              fontSize: "35px",
+              fontSize: "25px",
               marginRight: "12px",
             }}
           >
@@ -287,7 +239,7 @@ const StickyPracticeBox = ({
           <h2
             style={{
               color: "#fff",
-              fontSize: "24px",
+              fontSize: "20px",
               fontWeight: 700,
               fontStyle: "italic",
               margin: 0,
@@ -304,9 +256,36 @@ const StickyPracticeBox = ({
             padding: "24px 32px",
           }}
         >
-          {/* Operations */}
+          {/* Categories Selector */}
+          <div>
+            <h5 style={{ fontWeight: 700, marginBottom: "5px" }}>Category</h5>
+            <div className="d-flex gap-2">
+              {CATEGORIES_CONFIG.map((cat) => {
+                const isActive = category === cat.id;
+                return (
+                  <button
+                    key={cat.id}
+                    onClick={() => handleCategoryChange(cat.id)}
+                    className={`btn rounded-pill px-4 ${isActive ? "btn-primary" : "btn-outline-secondary"
+                      }`}
+                    style={{
+                      fontWeight: 600,
+                      fontSize: "12px",
+                      transition: "all 0.2s",
+                    }}
+                  >
+                    {cat.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
 
-          <div className="mb-4">
+          <hr style={{ margin: "10px 0", border: "0", borderTop: "1px solid #ddd" }} />
+
+          {/* Operations / Topics Grid */}
+
+          <div className="mb-1">
             <div className="d-flex justify-content-between align-items-center mb-1">
               <h5
                 style={{
@@ -314,7 +293,7 @@ const StickyPracticeBox = ({
                   marginBottom: 0,
                 }}
               >
-                Select Operations
+                {category === "Math" ? "Select Operations" : "Select Topics"}
               </h5>
 
               <button
@@ -323,8 +302,7 @@ const StickyPracticeBox = ({
                   handleSelectAll
                 }
               >
-                {selectedOperations.length ===
-                  operations.length
+                {selectedTopics.length === topics.length
                   ? "Deselect All"
                   : "Select All"}
               </button>
@@ -333,88 +311,55 @@ const StickyPracticeBox = ({
             <small
               className="text-muted"
             >
-              You can select multiple
-              operations
+              You can select multiple {category === "Math" ? "operations" : "topics"}
             </small>
 
             <div className="row g-2 mt-2">
 
-              {operations.map(
-                (operation) => {
-                  const selected =
-                    selectedOperations.includes(
-                      operation.id
-                    );
+              {topics.map(
+                (topic) => {
+                  const selected = selectedTopics.includes(topic.id);
 
                   return (
                     <div
                       className="col-6"
-                      key={
-                        operation.id
-                      }
+                      key={topic.id}
                     >
                       <div
-                        onClick={() =>
-                          toggleOperation(
-                            operation.id
-                          )
-                        }
+                        onClick={() => toggleOperation(topic.id)}
                         style={{
-                          height:
-                            "59px",
-                          cursor:
-                            "pointer",
-                          display:
-                            "flex",
-                          alignItems:
-                            "center",
-                          gap: "10px",
-                          padding:
-                            "0 12px",
-                          borderRadius:
-                            "5px",
-                          background:
-                            selected
-                              ? "#EAF4FF"
-                              : "#fff",
-                          border:
-                            selected
-                              ? "1px solid #0B6CBF"
-                              : "1px solid #ddd",
+                          height: "45px",
+                          cursor: "pointer",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "5px",
+                          padding: "0 10px",
+                          borderRadius: "5px",
+                          background: selected ? "#EAF4FF" : "#fff",
+                          border: selected ? "1px solid #0B6CBF" : "1px solid #ddd",
                         }}
                       >
-                        {getIcon(
-                          operation.id
-                        )}
+                        {getIcon(topic.id)}
 
                         <span
                           style={{
-                            fontSize:
-                              "14px",
-                            fontWeight:
-                              600,
-                            color:
-                              selected
-                                ? "#0B6CBF"
-                                : "#111827",
+                            fontSize: "12px",
+                            fontWeight: 600,
+                            color: selected ? "#0B6CBF" : "#111827",
                             display: "flex",
                             alignItems: "center",
                             gap: "4px"
                           }}
                         >
-                          {
-                            operation.label
-                          }
-                          {isOperationLocked(operation.id) && (
+                          {topic.label}
+                          {isOperationLocked(topic.id) && (
                             <FaLock size={12} className="text-muted" />
                           )}
                         </span>
 
                         <input
                           type="checkbox"
-                          checked={
-                            selected
-                          }
+                          checked={selected}
                           readOnly
                           className="ms-auto"
                         />
@@ -429,12 +374,12 @@ const StickyPracticeBox = ({
 
           {/* Difficulty */}
 
-          <div className="mb-4">
+          <div className="mb-3">
             <h5
               style={{
                 fontWeight: 700,
                 marginBottom:
-                  "15px",
+                  "10px",
               }}
             >
               Select Difficulty
@@ -449,22 +394,12 @@ const StickyPracticeBox = ({
               ].map((item) => (
                 <button
                   key={item}
-                  onClick={() =>
-                    handleDifficultyClick(
-                      item
-                    )
-                  }
-                  className={`btn rounded-pill d-flex align-items-center gap-1 ${difficulty ===
-                    item
-                    ? "btn-primary"
-                    : "btn-outline-secondary"
+                  onClick={() => handleDifficultyClick(item)}
+                  className={`btn rounded-pill d-flex align-items-center gap-1 ${difficulty === item ? "btn-primary" : "btn-outline-secondary"
                     }`}
                 >
-                  {item
-                    .charAt(0)
-                    .toUpperCase() +
-                    item.slice(1)}
-                  {isDifficultyLocked(item) && (
+                  {item.charAt(0).toUpperCase() + item.slice(1)}
+                  {isDiffLocked(item) && (
                     <FaLock size={10} className={difficulty === item ? "text-white" : "text-muted"} />
                   )}
                 </button>
@@ -480,8 +415,8 @@ const StickyPracticeBox = ({
             onClick={handleStartPractice}
             disabled={startLoading}
             style={{
-              height: "59px",
-              fontSize: "18px",
+              height: "40px",
+              fontSize: "14px",
               fontWeight: 600,
               borderRadius: "12px",
             }}
@@ -491,7 +426,7 @@ const StickyPracticeBox = ({
 
           {/* Leaderboard */}
 
-          <div className="text-center mt-4">
+          <div className="text-center mt-2">
             <a
               href="/speedmath/leaderboard"
               style={{
